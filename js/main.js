@@ -19,8 +19,33 @@
                 this.context.beginPath();
                 this.context.arc(options.x, options.y, options.radius, startAngle, endAngle, false);
                 this.context.lineWidth = options.lineWidth;
+                this.context.fillStyle = options.fillColor;
+                if ( options.fill ) {
+                    this.context.lineTo(options.x, options.y);
+                    this.context.closePath();
+                    this.context.fill();
+                }
                 this.context.strokeStyle = options.color;
                 this.context.stroke();
+            },
+            pie : function (options) {
+                //If not 100% starting angle is 1.5
+                var startAngle = options.percentage === 1 ? 0 : 1.5;
+                var endAngle = options.percentage * 2 + 1.5;
+                var x = options.x;
+                var y = options.y;
+                var radius = options.radius;
+                var color = options.color;
+                this.circle({
+                    'x' : x,
+                    'y' : y,
+                    'radius' : radius,
+                    'startAngle' : startAngle,
+                    'endAngle' : endAngle,
+                    'fillColor' : color,
+                    'color' : color,
+                    'fill' : true
+                });
             },
             line : function (options) {
                 this.context.beginPath();
@@ -38,7 +63,7 @@
                 var fontText = options.text;
                 var x = options.x;
                 var y = options.y;
-                console.log(options);
+
                 this.context.font = fontFamily;
                 this.context.fillStyle = options.color;
                 this.context.fillText(options.text, x, y);
@@ -67,7 +92,7 @@
             },
             icon : function (options) {
                 var icon;
-                console.log(options);
+
                 switch ( options.icon ) {
                     case 'video' :
                         icon = '\uF03D';
@@ -135,6 +160,84 @@
 
     var myTimeline = Object.create(timeline);
     var canvas = document.getElementById('timeline');
+
+
+
+    //Generate some bullshit JSON
+    var generateCourse = function () {
+        var modules = 41;
+        var courseJSON = {};
+        var videoTitles = ['What to eat?', 'What not to eat?', 'Kale Party', 'Joshua talks about Joshua', 'Green stuff'];
+        var audioTitles = ['Health Foods', 'Bad Foods', 'Green Foods', 'Yellow Foods', 'Joshua talks about other people talking about Joshua', 'What eating kale sounds like'];
+        var assignmentTitles = ['Exercise for a week', 'Don\'t eat for a month', 'Eat kale for a week', 'Do a headstand', 'Take a picture of something you ate', 'Talk to someone about Joshua'];
+        var quizTitles = ['Quiz 1 - About Joshua', 'Quiz 2 - Foods you can eat', 'Quiz 3 - Foods you shouldn\'t eat', 'Quiz 4 - All about juices'];
+        var activityTypes = ['Test', 'Quiz', 'Video', 'Audio', 'Assignment'];
+        var currNodeId = 1;
+        var currTest = 1;
+
+        var buildActivities = function () {
+            var numberOfActivities = 4 + Math.ceil(6 * Math.random());
+            var activities = [];
+            for ( var i = 0; i < numberOfActivities; i++ ) {
+                var thisActivity = Math.floor(Math.random() * 4);
+                var thisPercentage = Math.floor(Math.random() * 101);
+                var thisTitle = '';
+                switch ( thisActivity ) {
+                    case 0 :
+                        thisTitle = 'Test ' + currTest;
+                        currTest++;
+                        break;
+                    case 1 :
+                        thisTitle = quizTitles[Math.floor(Math.random() * quizTitles.length)];
+                        break;
+                    case 2 :
+                        thisTitle = videoTitles[Math.floor(Math.random() * videoTitles.length)];
+                        break;
+                    case 3 :
+                        thisTitle = audioTitles[Math.floor(Math.random() * audioTitles.length)];
+                        break;
+                    case 4 :
+                        thisTitle = assignmentTitle[Math.floor(Math.random() * assignmentTitles.length)];
+                        break;
+                    default:
+                        break;
+                }
+                var thisNodeId = currNodeId;
+                currNodeId++;
+                activities.push({
+                    'nodeId' : thisNodeId,
+                    'type' : activityTypes[thisActivity],
+                    'title' : thisTitle,
+                    'complete' : thisPercentage
+                });
+            }
+            return activities;
+        };
+
+        for ( var i = 1; i < modules; i++ ) {
+            courseJSON[i] = {
+                'title' : 'Module ' + i,
+                'complete' : 0,
+                'time' : Math.ceil(16 * Math.random()) + 'h : ' + Math.ceil(Math.random() * 60) + 'm',
+                'activities' : buildActivities()
+            }
+
+            var numActivities = courseJSON[i].activities;
+            var percentFinished = 0;
+            for ( var k= 0; k < numActivities.length; k++ ) {
+                percentFinished += parseInt(numActivities[k].complete, 10);
+            }
+            courseJSON[i].complete = parseInt(percentFinished, 10) / parseInt(numActivities.length, 10);
+
+        }
+
+        console.log(courseJSON);
+        return courseJSON;
+
+    };
+
+    var thisCourse = generateCourse();
+
     myTimeline.draw.init(canvas);
     myTimeline.draw.setHeightAndWidth({
         'width' : 1000,
@@ -143,7 +246,7 @@
     myTimeline.draw.line({
         'x' : 20,
         'y' : 20,
-        'endPoints' : [430, 130],
+        'endPoints' : [430, 330],
         'lineWidth' : 7,
         'color' : 'blue'
     });
@@ -176,8 +279,15 @@
         'x' : 50,
         'y' : 50,
         'fontSize' : '50px',
-        'icon' : 'lock',
+        'icon' : 'video',
         'color' : 'black'
+    });
+    myTimeline.draw.pie({
+        'x' : 300,
+        'y' : 145,
+        'color' : 'orange',
+        'radius' : 150,
+        'percentage' : .90
     });
 
 })();
